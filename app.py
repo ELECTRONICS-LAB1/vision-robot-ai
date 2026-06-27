@@ -75,13 +75,25 @@ def inicio():
             model="gemini-2.5-flash",
 
             contents=[
+"""
+Analiza únicamente las figuras geométricas de colores presentes en la imagen.
 
-                """
-Analiza únicamente el objeto principal.
+Ignora completamente:
 
-Responde SOLO con UNA palabra.
+- Fondo
+- Hoja cuadriculada
+- Sombras
+- Cabellos
+- Dedos
+- Mesa
+- Cualquier otro objeto
 
-Opciones:
+Para cada figura identifica:
+
+- COLOR
+- FORMA
+
+Colores permitidos:
 
 ROJO
 AZUL
@@ -90,7 +102,23 @@ AMARILLO
 NEGRO
 BLANCO
 
-No escribas ninguna explicación.
+Formas permitidas:
+
+CIRCULO
+HEXAGONO
+ESTRELLA
+
+Responde una línea por cada figura usando exactamente este formato:
+
+COLOR,FORMA
+
+Ejemplo:
+
+ROJO,HEXAGONO
+AZUL,CIRCULO
+VERDE,ESTRELLA
+
+No escribas nada más
 """,
 
                 types.Part.from_bytes(
