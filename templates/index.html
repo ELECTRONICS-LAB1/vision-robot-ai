@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Clasificador Inteligente</title>
+
+<style>
+
+body{
+
+font-family:Arial;
+
+background:#202124;
+
+color:white;
+
+text-align:center;
+
+padding:40px;
+
+}
+
+h1{
+
+color:#00ff88;
+
+}
+
+form{
+
+margin-top:30px;
+
+}
+
+input{
+
+margin:20px;
+
+font-size:18px;
+
+}
+
+button{
+
+padding:15px 35px;
+
+font-size:20px;
+
+border:none;
+
+background:#00ff88;
+
+border-radius:10px;
+
+cursor:pointer;
+
+}
+
+button:hover{
+
+background:#00cc66;
+
+}
+
+.resultado{
+
+margin-top:40px;
+
+font-size:30px;
+
+color:yellow;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>
+
+CLASIFICADOR INTELIGENTE
+
+</h1>
+
+<form method="POST" enctype="multipart/form-data">
+
+<input
+
+type="file"
+
+name="imagen"
+
+accept="image/*"
+
+capture="environment"
+
+required>
+
+<br>
+
+<button>
+
+ANALIZAR
+
+</button>
+
+</form>
+
+{% if resultado %}
+
+<div class="resultado">
+
+Color detectado:
+
+<b>{{resultado}}</b>
+
+</div>
+
+{% endif %}
+
+</body>
+
+</html>
