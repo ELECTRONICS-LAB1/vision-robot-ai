@@ -1,21 +1,7 @@
 from flask import Flask, render_template, request
-from dotenv import load_dotenv
-from google import genai
-from google.genai import types
 import os
 
-# ==========================================
-# CARGAR API KEY
-# ==========================================
-
-load_dotenv()
-
-API_KEY = os.getenv("GEMINI_API_KEY")
-
-if not API_KEY:
-    raise Exception("No se encontró GEMINI_API_KEY en el archivo .env")
-
-client = genai.Client(api_key=API_KEY)
+from detector import detectar_objeto
 
 # ==========================================
 # FLASK
@@ -26,8 +12,7 @@ app = Flask(__name__)
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Estado que leerá la ESP32
-ultimo_color = "ESPERANDO"
+ultimo_resultado = "ESPERANDO"
 
 # ==========================================
 # PAGINA PRINCIPAL
@@ -36,18 +21,26 @@ ultimo_color = "ESPERANDO"
 @app.route("/", methods=["GET", "POST"])
 def inicio():
 
-    global ultimo_color
+    global ultimo_resultado
 
     resultado = None
 
     if request.method == "POST":
 
+        if "imagen" not in request.files:
+
+            return render_template(
+                "index.html",
+                resultado="No se recibió ninguna imagen."
+            )
+
         archivo = request.files["imagen"]
 
         if archivo.filename == "":
+
             return render_template(
                 "index.html",
-                resultado="No se seleccionó imagen."
+                resultado="No se seleccionó ninguna imagen."
             )
 
         ruta = os.path.join(
@@ -57,85 +50,40 @@ def inicio():
 
         archivo.save(ruta)
 
-        # Tipo MIME
-        extension = ruta.lower()
+        try:
 
-        if extension.endswith(".png"):
-            mime = "image/png"
-        elif extension.endswith(".jpeg"):
-            mime = "image/jpeg"
-        else:
-            mime = "image/jpeg"
+            datos = detectar_objeto(ruta)
 
-        with open(ruta, "rb") as f:
-            imagen = f.read()
+            print("DATOS:", datos)
 
-        respuesta = client.models.generate_content(
+            if datos is None:
 
-            model="gemini-2.5-flash",
+                resultado = "NO SE DETECTÓ NINGÚN OBJETO"
 
-            contents=[
-"""
-Analiza únicamente las figuras geométricas de colores presentes en la imagen.
+                ultimo_resultado = "ERROR"
 
-Ignora completamente:
+            else:
 
-- Fondo
-- Hoja cuadriculada
-- Sombras
-- Cabellos
-- Dedos
-- Mesa
-- Cualquier otro objeto
+                resultado = f'{datos["color"]},{datos["forma"]}'
 
-Para cada figura identifica:
+                ultimo_resultado = resultado
 
-- COLOR
-- FORMA
+                print("--------------------------------")
+                print("COLOR :", datos["color"])
+                print("FORMA :", datos["forma"])
+                print("X :", datos["x"])
+                print("Y :", datos["y"])
+                print("AREA :", datos["area"])
+                print("--------------------------------")
 
-Colores permitidos:
+        except Exception as e:
 
-ROJO
-AZUL
-VERDE
-AMARILLO
-NEGRO
-BLANCO
+            print("===================================")
+            print("ERROR EN detector.py")
+            print(e)
+            print("===================================")
 
-Formas permitidas:
-
-CIRCULO
-HEXAGONO
-ESTRELLA
-
-Responde una línea por cada figura usando exactamente este formato:
-
-COLOR,FORMA
-
-Ejemplo:
-
-ROJO,HEXAGONO
-AZUL,CIRCULO
-VERDE,ESTRELLA
-
-No escribas nada más
-""",
-
-                types.Part.from_bytes(
-                    data=imagen,
-                    mime_type=mime
-                )
-
-            ]
-        )
-
-        resultado = respuesta.text.strip().upper()
-
-        ultimo_color = resultado
-
-        print("--------------------------------")
-        print("COLOR DETECTADO:", ultimo_color)
-        print("--------------------------------")
+            resultado = f"ERROR: {e}"
 
     return render_template(
         "index.html",
@@ -143,23 +91,22 @@ No escribas nada más
     )
 
 # ==========================================
-# CONSULTA DE LA ESP32
+# CONSULTA ESP32
 # ==========================================
 
 @app.route("/resultado")
 def resultado():
 
-    global ultimo_color
+    global ultimo_resultado
 
-    color = ultimo_color
+    r = ultimo_resultado
 
-    # Después de leerlo vuelve a esperar
-    ultimo_color = "ESPERANDO"
+    ultimo_resultado = "ESPERANDO"
 
-    return color
+    return r
 
 # ==========================================
-# SABER SI EL SERVIDOR ESTA VIVO
+# ESTADO DEL SERVIDOR
 # ==========================================
 
 @app.route("/estado")
