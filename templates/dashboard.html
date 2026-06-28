@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SCADA - Clasificador Inteligente</title>
+
+<meta http-equiv="refresh" content="2">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial;
+}
+
+body{
+
+background:#0f172a;
+color:white;
+
+}
+
+header{
+
+background:#1e293b;
+padding:20px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+
+box-shadow:0px 3px 10px black;
+
+}
+
+header h1{
+
+color:#00ff99;
+
+}
+
+.estado{
+
+display:flex;
+gap:20px;
+
+}
+
+.estado div{
+
+background:#334155;
+padding:10px 20px;
+border-radius:10px;
+
+}
+
+.online{
+
+color:#00ff66;
+font-weight:bold;
+
+}
+
+.grid{
+
+padding:30px;
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+
+gap:25px;
+
+}
+
+.card{
+
+background:#1e293b;
+
+padding:25px;
+
+border-radius:15px;
+
+text-align:center;
+
+transition:.3s;
+
+cursor:pointer;
+
+box-shadow:0px 0px 15px rgba(0,0,0,.4);
+
+}
+
+.card:hover{
+
+transform:scale(1.05);
+
+background:#334155;
+
+}
+
+.numero{
+
+font-size:55px;
+
+font-weight:bold;
+
+margin-top:15px;
+
+}
+
+.total{
+
+color:#00ff99;
+
+}
+
+.rojo{
+
+color:#ff4444;
+
+}
+
+.azul{
+
+color:#55aaff;
+
+}
+
+.verde{
+
+color:#00ff66;
+
+}
+
+.amarillo{
+
+color:yellow;
+
+}
+
+.negro{
+
+color:#bbbbbb;
+
+}
+
+.blanco{
+
+color:white;
+
+}
+
+.seccion{
+
+margin:30px;
+
+background:#1e293b;
+
+padding:25px;
+
+border-radius:15px;
+
+box-shadow:0px 0px 15px black;
+
+}
+
+.seccion h2{
+
+margin-bottom:20px;
+
+color:#00ff99;
+
+}
+
+table{
+
+width:100%;
+
+border-collapse:collapse;
+
+}
+
+th{
+
+background:#334155;
+
+padding:15px;
+
+}
+
+td{
+
+padding:12px;
+
+text-align:center;
+
+border-bottom:1px solid #444;
+
+}
+
+footer{
+
+text-align:center;
+
+padding:20px;
+
+color:#aaa;
+
+}
+
+.reloj{
+
+font-size:22px;
+
+color:#00ff99;
+
+font-weight:bold;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>
+
+🤖 CLASIFICADOR AUTOMÁTICO POR VISIÓN ARTIFICIAL
+
+</h1>
+
+<div class="estado">
+
+<div>
+
+Servidor
+
+<br>
+
+<span class="online">
+
+🟢 ONLINE
+
+</span>
+
+</div>
+
+<div>
+
+ESP32
+
+<br>
+
+<span class="online">
+
+🟢 CONECTADO
+
+</span>
+
+</div>
+
+<div>
+
+Railway
+
+<br>
+
+<span class="online">
+
+🟢 ACTIVO
+
+</span>
+
+</div>
+
+<div class="reloj" id="hora">
+
+00:00:00
+
+</div>
+
+</div>
+
+</header>
+
+<div class="grid">
+
+<div class="card">
+
+<h2>Total</h2>
+
+<div class="numero total">
+
+{{datos.TOTAL}}
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>🔴 Rojas</h2>
+
+<div class="numero rojo">
+
+{{datos.ROJO}}
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>🔵 Azules</h2>
+
+<div class="numero azul">
+
+{{datos.AZUL}}
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>🟢 Verdes</h2>
+
+<div class="numero verde">
+
+{{datos.VERDE}}
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>🟡 Amarillas</h2>
+
+<div class="numero amarillo">
+
+{{datos.AMARILLO}}
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>⚫ Negras</h2>
+
+<div class="numero negro">
+
+{{datos.NEGRO}}
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>⚪ Blancas</h2>
+
+<div class="numero blanco">
+
+{{datos.BLANCO}}
+
+</div>
+
+</div>
+
+</div>
+
+<div class="seccion">
+
+<h2>
+
+📦 ÚLTIMA PIEZA DETECTADA
+
+</h2>
+
+<h1 style="font-size:55px;color:#00ff99">
+
+{{datos.ULTIMO_COLOR}}
+
+</h1>
+
+<h2>
+
+{{datos.ULTIMA_FORMA}}
+
+</h2>
+
+</div>
+
+<div class="seccion">
+
+<h2>
+
+📊 PRODUCCIÓN
+
+</h2>
+
+<table>
+
+<tr>
+
+<th>Color</th>
+
+<th>Cantidad</th>
+
+</tr>
+
+<tr>
+
+<td>🔴 Rojo</td>
+
+<td>{{datos.ROJO}}</td>
+
+</tr>
+
+<tr>
+
+<td>🔵 Azul</td>
+
+<td>{{datos.AZUL}}</td>
+
+</tr>
+
+<tr>
+
+<td>🟢 Verde</td>
+
+<td>{{datos.VERDE}}</td>
+
+</tr>
+
+<tr>
+
+<td>🟡 Amarillo</td>
+
+<td>{{datos.AMARILLO}}</td>
+
+</tr>
+
+<tr>
+
+<td>⚫ Negro</td>
+
+<td>{{datos.NEGRO}}</td>
+
+</tr>
+
+<tr>
+
+<td>⚪ Blanco</td>
+
+<td>{{datos.BLANCO}}</td>
+
+</tr>
+
+</table>
+
+</div>
+
+<footer>
+
+Sistema Inteligente de Clasificación de Objetos mediante Visión Artificial - ESPE
+
+</footer>
+
+<script>
+
+function actualizarHora(){
+
+const ahora=new Date();
+
+document.getElementById("hora").innerHTML=ahora.toLocaleTimeString();
+
+}
+
+setInterval(actualizarHora,1000);
+
+actualizarHora();
+
+</script>
+
+</body>
+
+</html>

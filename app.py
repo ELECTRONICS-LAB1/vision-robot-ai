@@ -2,6 +2,14 @@ from flask import Flask, render_template, request
 import os
 
 from detector import detectar_objeto
+from database import (
+    crear_base,
+    guardar_pieza,
+    obtener_total,
+    contar_color,
+    obtener_ultima_pieza,
+    obtener_historial
+)
 
 # ==========================================
 # FLASK
@@ -9,10 +17,54 @@ from detector import detectar_objeto
 
 app = Flask(__name__)
 
+crear_base()
+
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# Resultado para ESP32
 ultimo_resultado = "ESPERANDO"
+
+# ==========================================
+# DASHBOARD
+# ==========================================
+
+@app.route("/dashboard")
+def dashboard():
+
+    datos = {
+
+        "TOTAL": obtener_total(),
+
+        "ROJO": contar_color("ROJO"),
+
+        "AZUL": contar_color("AZUL"),
+
+        "VERDE": contar_color("VERDE"),
+
+        "AMARILLO": contar_color("AMARILLO"),
+
+        "NEGRO": contar_color("NEGRO"),
+
+        "BLANCO": contar_color("BLANCO")
+
+    }
+
+    ultima = obtener_ultima_pieza()
+
+    historial = obtener_historial()
+
+    return render_template(
+
+        "dashboard.html",
+
+        datos=datos,
+
+        ultima=ultima,
+
+        historial=historial
+
+    )
 
 # ==========================================
 # PAGINA PRINCIPAL
@@ -27,11 +79,16 @@ def inicio():
 
     if request.method == "POST":
 
+        print("===== RECIBÍ UN POST =====")
+
         if "imagen" not in request.files:
 
             return render_template(
+
                 "index.html",
+
                 resultado="No se recibió ninguna imagen."
+
             )
 
         archivo = request.files["imagen"]
@@ -39,22 +96,30 @@ def inicio():
         if archivo.filename == "":
 
             return render_template(
+
                 "index.html",
+
                 resultado="No se seleccionó ninguna imagen."
+
             )
 
         ruta = os.path.join(
+
             UPLOAD_FOLDER,
+
             archivo.filename
+
         )
 
         archivo.save(ruta)
+
+        print("Imagen guardada:", ruta)
 
         try:
 
             datos = detectar_objeto(ruta)
 
-            print("DATOS:", datos)
+            print("Resultado detector:", datos)
 
             if datos is None:
 
@@ -67,6 +132,24 @@ def inicio():
                 resultado = f'{datos["color"]},{datos["forma"]}'
 
                 ultimo_resultado = resultado
+
+                # =====================================
+                # GUARDAR EN SQLITE
+                # =====================================
+
+                guardar_pieza(
+
+                    datos["color"],
+
+                    datos["forma"],
+
+                    datos["x"],
+
+                    datos["y"],
+
+                    datos["area"]
+
+                )
 
                 print("--------------------------------")
                 print("COLOR :", datos["color"])
@@ -86,8 +169,11 @@ def inicio():
             resultado = f"ERROR: {e}"
 
     return render_template(
+
         "index.html",
+
         resultado=resultado
+
     )
 
 # ==========================================
@@ -121,7 +207,11 @@ def estado():
 if __name__ == "__main__":
 
     app.run(
+
         host="0.0.0.0",
+
         port=5000,
+
         debug=True
+
     )
