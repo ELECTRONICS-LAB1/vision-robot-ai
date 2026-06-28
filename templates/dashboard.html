@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>SCADA - Clasificador Inteligente</title>
+<title>VISION ROBOT AI - SCADA INDUSTRIAL</title>
 
 <meta http-equiv="refresh" content="2">
 
@@ -15,7 +16,7 @@
 margin:0;
 padding:0;
 box-sizing:border-box;
-font-family:Arial;
+font-family:Arial,Helvetica,sans-serif;
 }
 
 body{
@@ -27,13 +28,17 @@ color:white;
 
 header{
 
-background:#1e293b;
+background:#111827;
+
 padding:20px;
+
 display:flex;
+
 justify-content:space-between;
+
 align-items:center;
 
-box-shadow:0px 3px 10px black;
+box-shadow:0px 4px 15px black;
 
 }
 
@@ -41,27 +46,121 @@ header h1{
 
 color:#00ff99;
 
+font-size:30px;
+
 }
 
 .estado{
 
 display:flex;
+
 gap:20px;
+
+align-items:center;
 
 }
 
 .estado div{
 
-background:#334155;
-padding:10px 20px;
+background:#1e293b;
+
+padding:10px 18px;
+
 border-radius:10px;
+
+text-align:center;
+
+min-width:120px;
 
 }
 
 .online{
 
 color:#00ff66;
+
 font-weight:bold;
+
+}
+
+.reloj{
+
+font-size:22px;
+
+font-weight:bold;
+
+color:#00ff99;
+
+}
+
+.toolbar{
+
+display:flex;
+
+justify-content:center;
+
+gap:15px;
+
+flex-wrap:wrap;
+
+padding:20px;
+
+background:#111827;
+
+}
+
+.toolbar button{
+
+padding:14px 24px;
+
+border:none;
+
+border-radius:10px;
+
+font-size:16px;
+
+font-weight:bold;
+
+cursor:pointer;
+
+transition:.3s;
+
+color:white;
+
+}
+
+.toolbar button:hover{
+
+transform:scale(1.08);
+
+}
+
+.btn1{
+
+background:#0284c7;
+
+}
+
+.btn2{
+
+background:#7c3aed;
+
+}
+
+.btn3{
+
+background:#16a34a;
+
+}
+
+.btn4{
+
+background:#2563eb;
+
+}
+
+.btn5{
+
+background:#dc2626;
 
 }
 
@@ -87,17 +186,17 @@ border-radius:15px;
 
 text-align:center;
 
+box-shadow:0px 0px 15px rgba(0,0,0,.4);
+
 transition:.3s;
 
 cursor:pointer;
-
-box-shadow:0px 0px 15px rgba(0,0,0,.4);
 
 }
 
 .card:hover{
 
-transform:scale(1.05);
+transform:translateY(-6px);
 
 background:#334155;
 
@@ -127,7 +226,7 @@ color:#ff4444;
 
 .azul{
 
-color:#55aaff;
+color:#4ea5ff;
 
 }
 
@@ -145,7 +244,7 @@ color:yellow;
 
 .negro{
 
-color:#bbbbbb;
+color:#bdbdbd;
 
 }
 
@@ -199,7 +298,15 @@ padding:12px;
 
 text-align:center;
 
-border-bottom:1px solid #444;
+border-bottom:1px solid #555;
+
+}
+
+progress{
+
+width:100%;
+
+height:22px;
 
 }
 
@@ -209,17 +316,9 @@ text-align:center;
 
 padding:20px;
 
-color:#aaa;
+color:#888;
 
-}
-
-.reloj{
-
-font-size:22px;
-
-color:#00ff99;
-
-font-weight:bold;
+margin-top:20px;
 
 }
 
@@ -233,7 +332,7 @@ font-weight:bold;
 
 <h1>
 
-🤖 CLASIFICADOR AUTOMÁTICO POR VISIÓN ARTIFICIAL
+🤖 VISION ROBOT AI - SCADA INDUSTRIAL
 
 </h1>
 
@@ -291,11 +390,45 @@ Railway
 
 </header>
 
+<div class="toolbar">
+
+<button class="btn1" onclick="location.reload()">
+
+🔄 Actualizar
+
+</button>
+
+<button class="btn2">
+
+📋 Historial
+
+</button>
+
+<button class="btn3">
+
+📥 Excel
+
+</button>
+
+<button class="btn4">
+
+📄 CSV
+
+<button
+class="btn5"
+onclick="if(confirm('¿Desea borrar TODA la base de datos?')) location.href='/limpiar';">
+
+🗑 Limpiar Base
+
+</button>
+
+</div>
+
 <div class="grid">
 
 <div class="card">
 
-<h2>Total</h2>
+<h2>📦 Total</h2>
 
 <div class="numero total">
 
@@ -378,102 +511,203 @@ Railway
 </div>
 
 </div>
-
 <div class="seccion">
 
-<h2>
+<h2>📦 ÚLTIMA PIEZA DETECTADA</h2>
 
-📦 ÚLTIMA PIEZA DETECTADA
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;">
 
-</h2>
+<div class="card">
 
-<h1 style="font-size:55px;color:#00ff99">
+<h3>🎨 COLOR</h3>
 
-{{datos.ULTIMO_COLOR}}
+<div class="numero total">
 
-</h1>
+{{ultima.color}}
 
-<h2>
+</div>
 
-{{datos.ULTIMA_FORMA}}
+</div>
 
-</h2>
+<div class="card">
+
+<h3>🔷 FORMA</h3>
+
+<div class="numero azul">
+
+{{ultima.forma}}
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>📅 FECHA</h3>
+
+<div style="font-size:20px;margin-top:20px;">
+
+{{ultima.fecha}}
+
+</div>
+
+</div>
+
+</div>
 
 </div>
 
 <div class="seccion">
 
-<h2>
+<h2>📊 PRODUCCIÓN POR COLOR</h2>
 
-📊 PRODUCCIÓN
+<p>🔴 Rojas</p>
 
-</h2>
+<progress value="{{datos.ROJO}}" max="{{datos.TOTAL}}"></progress>
+
+<br><br>
+
+<p>🔵 Azules</p>
+
+<progress value="{{datos.AZUL}}" max="{{datos.TOTAL}}"></progress>
+
+<br><br>
+
+<p>🟢 Verdes</p>
+
+<progress value="{{datos.VERDE}}" max="{{datos.TOTAL}}"></progress>
+
+<br><br>
+
+<p>🟡 Amarillas</p>
+
+<progress value="{{datos.AMARILLO}}" max="{{datos.TOTAL}}"></progress>
+
+<br><br>
+
+<p>⚫ Negras</p>
+
+<progress value="{{datos.NEGRO}}" max="{{datos.TOTAL}}"></progress>
+
+<br><br>
+
+<p>⚪ Blancas</p>
+
+<progress value="{{datos.BLANCO}}" max="{{datos.TOTAL}}"></progress>
+
+</div>
+
+<div class="seccion">
+
+<h2>📋 HISTORIAL DE PIEZAS</h2>
 
 <table>
 
 <tr>
 
-<th>Color</th>
+<th>ID</th>
 
-<th>Cantidad</th>
+<th>FECHA</th>
+
+<th>COLOR</th>
+
+<th>FORMA</th>
 
 </tr>
+
+{% for pieza in historial %}
 
 <tr>
 
-<td>🔴 Rojo</td>
+<td>{{pieza.id}}</td>
 
-<td>{{datos.ROJO}}</td>
+<td>{{pieza.fecha}}</td>
 
-</tr>
+<td>{{pieza.color}}</td>
 
-<tr>
-
-<td>🔵 Azul</td>
-
-<td>{{datos.AZUL}}</td>
+<td>{{pieza.forma}}</td>
 
 </tr>
 
-<tr>
-
-<td>🟢 Verde</td>
-
-<td>{{datos.VERDE}}</td>
-
-</tr>
-
-<tr>
-
-<td>🟡 Amarillo</td>
-
-<td>{{datos.AMARILLO}}</td>
-
-</tr>
-
-<tr>
-
-<td>⚫ Negro</td>
-
-<td>{{datos.NEGRO}}</td>
-
-</tr>
-
-<tr>
-
-<td>⚪ Blanco</td>
-
-<td>{{datos.BLANCO}}</td>
-
-</tr>
+{% endfor %}
 
 </table>
 
 </div>
 
+<div class="seccion">
+
+<h2>🏭 PROCESO INDUSTRIAL</h2>
+
+<div style="display:flex;justify-content:space-around;align-items:center;font-size:28px;flex-wrap:wrap;gap:20px;padding:20px;">
+
+<div>
+
+📷<br>
+
+CÁMARA
+
+</div>
+
+<div>
+
+⬇
+
+</div>
+
+<div>
+
+██████████
+
+<br>
+
+BANDA
+
+</div>
+
+<div>
+
+⬇
+
+</div>
+
+<div>
+
+🤖<br>
+
+IA
+
+</div>
+
+<div>
+
+⬇
+
+</div>
+
+<div>
+
+📦<br>
+
+CLASIFICACIÓN
+
+</div>
+
+</div>
+
+</div>
+
 <footer>
 
-Sistema Inteligente de Clasificación de Objetos mediante Visión Artificial - ESPE
+VISION ROBOT AI
+
+<br>
+
+Sistema Inteligente de Clasificación Automática mediante Visión Artificial
+
+<br>
+
+Universidad de las Fuerzas Armadas ESPE
 
 </footer>
 

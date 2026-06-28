@@ -1,5 +1,5 @@
-from flask import Flask, render_template, request
-import os
+from flask import Flask, render_template, request, redirect
+import os 
 
 from detector import detectar_objeto
 from database import (
@@ -8,7 +8,8 @@ from database import (
     obtener_total,
     contar_color,
     obtener_ultima_pieza,
-    obtener_historial
+    obtener_historial,
+    borrar_base
 )
 
 # ==========================================
@@ -199,6 +200,17 @@ def resultado():
 def estado():
 
     return "SERVIDOR OK"
+# ==========================================
+# LIMPIAR BASE
+# ==========================================
+@app.route("/limpiar")
+def limpiar():
+
+    print(">>> ENTRÉ A LIMPIAR <<<")
+
+    borrar_base()
+
+    return redirect("/dashboard")
 
 # ==========================================
 # INICIO

@@ -178,3 +178,20 @@ def obtener_historial(limite=20):
     conexion.close()
 
     return datos
+# ==========================================
+# BORRAR TODA LA BASE
+# ==========================================
+
+def borrar_base():
+
+    conexion = sqlite3.connect(DB)
+
+    cursor = conexion.cursor()
+
+    cursor.execute("DELETE FROM piezas")
+
+    conexion.commit()
+
+    conexion.close()
+
+    print("Base de datos eliminada correctamente.")
