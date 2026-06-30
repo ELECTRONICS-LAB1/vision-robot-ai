@@ -2,52 +2,7 @@ import cv2
 import numpy as np
 
 
-def detectar_forma(imagen):
-
-    gris = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
-
-    # Suavizar conservando bordes
-    gris = cv2.bilateralFilter(gris, 9, 75, 75)
-
-    # Mejorar contraste
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-    gris = clahe.apply(gris)
-
-    # Umbral adaptativo
-    binaria = cv2.adaptiveThreshold(
-        gris,
-        255,
-        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-        cv2.THRESH_BINARY_INV,
-        31,
-        8
-    )
-
-    # Eliminar ruido
-    kernel = np.ones((3,3), np.uint8)
-
-    binaria = cv2.morphologyEx(
-        binaria,
-        cv2.MORPH_OPEN,
-        kernel
-    )
-
-    binaria = cv2.morphologyEx(
-        binaria,
-        cv2.MORPH_CLOSE,
-        kernel
-    )
-
-    contornos, _ = cv2.findContours(
-        binaria,
-        cv2.RETR_EXTERNAL,
-        cv2.CHAIN_APPROX_SIMPLE
-    )
-
-    if len(contornos) == 0:
-        return "DESCONOCIDA"
-
-    contorno = max(contornos, key=cv2.contourArea)
+def detectar_forma(contorno):
 
     area = cv2.contourArea(contorno)
 
@@ -56,18 +11,32 @@ def detectar_forma(imagen):
 
     perimetro = cv2.arcLength(contorno, True)
 
+    if perimetro == 0:
+        return "DESCONOCIDA"
+
     aproximacion = cv2.approxPolyDP(
         contorno,
-        0.018 * perimetro,
+        0.03 * perimetro,
         True
     )
 
     lados = len(aproximacion)
 
+    print("--------------------------------")
+    print("Área:", area)
+    print("Perímetro:", perimetro)
     print("Lados:", lados)
+
+    # ==========================
+    # TRIÁNGULO
+    # ==========================
 
     if lados == 3:
         return "TRIANGULO"
+
+    # ==========================
+    # CUADRADO
+    # ==========================
 
     elif lados == 4:
 
@@ -75,31 +44,22 @@ def detectar_forma(imagen):
 
         relacion = w / float(h)
 
-        if 0.90 <= relacion <= 1.10:
+        print("Relación:", relacion)
+
+        if 0.85 <= relacion <= 1.15:
             return "CUADRADO"
 
-        else:
-            return "RECTANGULO"
+        return "DESCONOCIDA"
 
-    else:
+    # ==========================
+    # CÍRCULO
+    # ==========================
 
-        circularidad = (4 * np.pi * area) / (perimetro * perimetro)
+    circularidad = (4 * np.pi * area) / (perimetro * perimetro)
 
-        if circularidad > 0.83:
-            return "CIRCULO"
+    print("Circularidad:", circularidad)
 
-        hull = cv2.convexHull(contorno)
-
-        hull_area = cv2.contourArea(hull)
-
-        if hull_area > 0:
-
-            solidez = area / hull_area
-
-            if solidez < 0.86:
-                return "ESTRELLA"
-
-        if 5 <= lados <= 8:
-            return "POLIGONO"
+    if circularidad >= 0.80:
+        return "CIRCULO"
 
     return "DESCONOCIDA"

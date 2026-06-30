@@ -73,7 +73,8 @@ def detectar_objeto(ruta_imagen):
         -1
     )
 
-    objeto = cv2.bitwise_and(
+    # Aislamos el objeto en una nueva variable para que el fondo quede negro
+    objeto_aislado = cv2.bitwise_and(
         imagen,
         imagen,
         mask=mascara
@@ -85,13 +86,23 @@ def detectar_objeto(ruta_imagen):
 
     x, y, w, h = cv2.boundingRect(contorno)
 
-    objeto = objeto[y:y+h, x:x+w]
+    margen = 10
+
+    x = max(0, x - margen)
+    y = max(0, y - margen)
+
+    w = min(imagen.shape[1] - x, w + 2 * margen)
+    h = min(imagen.shape[0] - y, h + 2 * margen)
+
+    # Recortamos desde 'objeto_aislado' para garantizar que el fondo sea negro
+    # y no afecte a la detección cromática.
+    objeto = objeto_aislado[y:y+h, x:x+w]
 
     # ==========================================
     # DETECTAR FORMA
     # ==========================================
 
-    forma = detectar_forma(imagen)
+    forma = detectar_forma(contorno)
 
     # ==========================================
     # DETECTAR COLOR
@@ -122,3 +133,4 @@ def detectar_objeto(ruta_imagen):
     print("----------------------------------")
 
     return resultado
+

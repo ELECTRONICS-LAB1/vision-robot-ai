@@ -5,6 +5,9 @@ import numpy as np
 def detectar_color(imagen):
 
     hsv = cv2.cvtColor(imagen, cv2.COLOR_BGR2HSV)
+    v = hsv[:, :, 2]
+    v = cv2.equalizeHist(v)
+    hsv[:, :, 2] = v
 
     colores = {
 
@@ -17,9 +20,9 @@ def detectar_color(imagen):
             ((90,70,40),(135,255,255))
         ],
 
-        "VERDE":[
-            ((35,50,40),(90,255,255))
-        ],
+        "VERDE": [
+          ((30,40,30), (95,255,255))
+       ],
 
         "AMARILLO":[
             ((18,80,80),(38,255,255))
@@ -91,5 +94,6 @@ def detectar_color(imagen):
     if mayor_area < 100:
 
         return "DESCONOCIDO"
-
+    print("Color detectado:", mejor_color)
+    print("Área:", mayor_area)
     return mejor_color
