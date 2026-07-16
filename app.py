@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, jsonify
 import os 
 
 from detector import detectar_objeto
@@ -17,6 +17,9 @@ from database import (
 # ==========================================
 
 app = Flask(__name__)
+print("================================")
+print("ESTOY EJECUTANDO app.py NUEVO")
+print("================================")
 
 crear_base()
 
@@ -215,6 +218,75 @@ def limpiar():
 # ==========================================
 # INICIO
 # ==========================================
+# ==========================================
+# API PARA ESP32-CAM
+# ==========================================
+
+@app.route("/api", methods=["POST"])
+def api():
+
+    if "imagen" not in request.files:
+        return jsonify({
+            "ok": False,
+            "error": "No se recibió ninguna imagen"
+        }), 400
+
+    archivo = request.files["imagen"]
+
+    if archivo.filename == "":
+        return jsonify({
+            "ok": False,
+            "error": "Nombre de archivo vacío"
+        }), 400
+
+    ruta = os.path.join(
+        UPLOAD_FOLDER,
+        "esp32.jpg"
+    )
+
+    archivo.save(ruta)
+
+    try:
+
+        datos = detectar_objeto(ruta)
+
+        if datos is None:
+            return jsonify({
+                "ok": False,
+                "resultado": "NO DETECTADO"
+            })
+
+        guardar_pieza(
+            datos["color"],
+            datos["forma"],
+            datos["x"],
+            datos["y"],
+            datos["area"]
+        )
+
+        return jsonify({
+            "ok": True,
+            "color": datos["color"],
+            "forma": datos["forma"],
+            "x": datos["x"],
+            "y": datos["y"],
+            "area": datos["area"]
+        })
+
+    except Exception as e:
+
+        return jsonify({
+            "ok": False,
+            "error": str(e)
+        }), 500
+    
+@app.route("/api/test")
+def api_test():
+    return jsonify({
+        "ok": True,
+        "mensaje": "API ESP32 funcionando"
+    })
+print(app.url_map)
 
 if __name__ == "__main__":
 
