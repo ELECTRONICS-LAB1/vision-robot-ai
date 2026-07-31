@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, jsonify
 import os
+from flask import send_from_directory
 
 from detector import detectar_objeto
 from database import (
@@ -289,6 +290,17 @@ def api_test():
         "mensaje": "API ESP32 funcionando"
     })
 
+# ==========================================
+# VER ÚLTIMA FOTO
+# ==========================================
+
+@app.route("/foto")
+def foto():
+
+    return send_from_directory(
+        UPLOAD_FOLDER,
+        "esp32.jpg"
+    )
 
 print(app.url_map)
 
