@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, jsonify
-import os 
+import os
 
 from detector import detectar_objeto
 from database import (
@@ -17,6 +17,7 @@ from database import (
 # ==========================================
 
 app = Flask(__name__)
+
 print("================================")
 print("ESTOY EJECUTANDO app.py NUEVO")
 print("================================")
@@ -26,7 +27,6 @@ crear_base()
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Resultado para ESP32
 ultimo_resultado = "ESPERANDO"
 
 # ==========================================
@@ -37,37 +37,23 @@ ultimo_resultado = "ESPERANDO"
 def dashboard():
 
     datos = {
-
         "TOTAL": obtener_total(),
-
         "ROJO": contar_color("ROJO"),
-
         "AZUL": contar_color("AZUL"),
-
         "VERDE": contar_color("VERDE"),
-
         "AMARILLO": contar_color("AMARILLO"),
-
         "NEGRO": contar_color("NEGRO"),
-
         "BLANCO": contar_color("BLANCO")
-
     }
 
     ultima = obtener_ultima_pieza()
-
     historial = obtener_historial()
 
     return render_template(
-
         "dashboard.html",
-
         datos=datos,
-
         ultima=ultima,
-
         historial=historial
-
     )
 
 # ==========================================
@@ -88,11 +74,8 @@ def inicio():
         if "imagen" not in request.files:
 
             return render_template(
-
                 "index.html",
-
                 resultado="No se recibió ninguna imagen."
-
             )
 
         archivo = request.files["imagen"]
@@ -100,19 +83,13 @@ def inicio():
         if archivo.filename == "":
 
             return render_template(
-
                 "index.html",
-
                 resultado="No se seleccionó ninguna imagen."
-
             )
 
         ruta = os.path.join(
-
             UPLOAD_FOLDER,
-
             archivo.filename
-
         )
 
         archivo.save(ruta)
@@ -137,22 +114,12 @@ def inicio():
 
                 ultimo_resultado = resultado
 
-                # =====================================
-                # GUARDAR EN SQLITE
-                # =====================================
-
                 guardar_pieza(
-
                     datos["color"],
-
                     datos["forma"],
-
                     datos["x"],
-
                     datos["y"],
-
                     datos["area"]
-
                 )
 
                 print("--------------------------------")
@@ -173,11 +140,8 @@ def inicio():
             resultado = f"ERROR: {e}"
 
     return render_template(
-
         "index.html",
-
         resultado=resultado
-
     )
 
 # ==========================================
@@ -196,16 +160,18 @@ def resultado():
     return r
 
 # ==========================================
-# ESTADO DEL SERVIDOR
+# ESTADO
 # ==========================================
 
 @app.route("/estado")
 def estado():
 
     return "SERVIDOR OK"
+
 # ==========================================
 # LIMPIAR BASE
 # ==========================================
+
 @app.route("/limpiar")
 def limpiar():
 
@@ -214,10 +180,6 @@ def limpiar():
     borrar_base()
 
     return redirect("/dashboard")
-
-# ==========================================
-# INICIO
-# ==========================================
 # ==========================================
 # API PARA ESP32-CAM
 # ==========================================
@@ -225,7 +187,14 @@ def limpiar():
 @app.route("/api", methods=["POST"])
 def api():
 
+    print("================================")
+    print("POST RECIBIDO DESDE ESP32")
+    print("================================")
+
     if "imagen" not in request.files:
+
+        print("ERROR: No llegó el campo imagen")
+
         return jsonify({
             "ok": False,
             "error": "No se recibió ninguna imagen"
@@ -234,10 +203,19 @@ def api():
     archivo = request.files["imagen"]
 
     if archivo.filename == "":
+
+        print("ERROR: Nombre vacío")
+
         return jsonify({
             "ok": False,
             "error": "Nombre de archivo vacío"
         }), 400
+
+    print("======================")
+    print("FOTO RECIBIDA")
+    print("Nombre:", archivo.filename)
+    print("Tipo:", archivo.content_type)
+    print("======================")
 
     ruta = os.path.join(
         UPLOAD_FOLDER,
@@ -246,11 +224,16 @@ def api():
 
     archivo.save(ruta)
 
+    print("Imagen guardada:", ruta)
+
     try:
 
         datos = detectar_objeto(ruta)
 
+        print("Resultado:", datos)
+
         if datos is None:
+
             return jsonify({
                 "ok": False,
                 "resultado": "NO DETECTADO"
@@ -264,6 +247,14 @@ def api():
             datos["area"]
         )
 
+        print("--------------------------------")
+        print("COLOR :", datos["color"])
+        print("FORMA :", datos["forma"])
+        print("X :", datos["x"])
+        print("Y :", datos["y"])
+        print("AREA :", datos["area"])
+        print("--------------------------------")
+
         return jsonify({
             "ok": True,
             "color": datos["color"],
@@ -275,27 +266,36 @@ def api():
 
     except Exception as e:
 
+        print("================================")
+        print("ERROR EN detector.py")
+        print(e)
+        print("================================")
+
         return jsonify({
             "ok": False,
             "error": str(e)
         }), 500
-    
+
+
+# ==========================================
+# PRUEBA DE CONEXIÓN
+# ==========================================
+
 @app.route("/api/test")
 def api_test():
+
     return jsonify({
         "ok": True,
         "mensaje": "API ESP32 funcionando"
     })
+
+
 print(app.url_map)
 
 if __name__ == "__main__":
 
     app.run(
-
         host="0.0.0.0",
-
         port=5000,
-
         debug=True
-
     )
