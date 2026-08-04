@@ -13,7 +13,7 @@ def detectar_objeto(ruta_imagen):
         return None
 
     # ==========================================
-    # BUSCAR EL OBJETO
+    # PREPROCESAMIENTO
     # ==========================================
 
     gris = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
@@ -22,10 +22,28 @@ def detectar_objeto(ruta_imagen):
 
     _, binaria = cv2.threshold(
         gris,
-        180,
+        120,
         255,
         cv2.THRESH_BINARY_INV
     )
+
+    kernel = np.ones((3, 3), np.uint8)
+
+    binaria = cv2.morphologyEx(
+        binaria,
+        cv2.MORPH_OPEN,
+        kernel
+    )
+
+    binaria = cv2.morphologyEx(
+        binaria,
+        cv2.MORPH_CLOSE,
+        kernel
+    )
+
+    # ==========================================
+    # CONTORNOS
+    # ==========================================
 
     contornos, _ = cv2.findContours(
         binaria,
@@ -40,7 +58,7 @@ def detectar_objeto(ruta_imagen):
 
     area = cv2.contourArea(contorno)
 
-    if area < 500:
+    if area < 300:
         return None
 
     # ==========================================
@@ -60,29 +78,8 @@ def detectar_objeto(ruta_imagen):
         cy = 0
 
     # ==========================================
-    # CREAR MASCARA DEL OBJETO
+    # RECORTAR OBJETO
     # ==========================================
-
-    mascara = np.zeros(imagen.shape[:2], dtype=np.uint8)
-
-    cv2.drawContours(
-        mascara,
-        [contorno],
-        -1,
-        255,
-        -1
-    )
-
-    objeto = cv2.bitwise_and(
-        imagen,
-        imagen,
-        mask=mascara
-    )
-
-    # ==========================================
-    # ==========================================
-# RECORTAR SOLO EL OBJETO
-# ==========================================
 
     x, y, w, h = cv2.boundingRect(contorno)
 
@@ -97,15 +94,12 @@ def detectar_objeto(ruta_imagen):
     objeto = imagen[y:y+h, x:x+w]
 
     # ==========================================
-    # DETECTAR FORMA
-    # ==========================================
-
-    forma = detectar_forma(objeto)
-    # ==========================================
-    # DETECTAR COLOR
+    # DETECCIÓN
     # ==========================================
 
     color = detectar_color(objeto)
+
+    forma = detectar_forma(objeto)
 
     # ==========================================
     # RESULTADO
@@ -126,7 +120,12 @@ def detectar_objeto(ruta_imagen):
     }
 
     print("----------------------------------")
-    print(resultado)
+    print("OBJETO DETECTADO")
+    print("----------------------------------")
+    print("Color :", color)
+    print("Forma :", forma)
+    print("Area  :", area)
+    print("Centro:", (cx, cy))
     print("----------------------------------")
 
     return resultado
