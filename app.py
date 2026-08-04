@@ -1,6 +1,6 @@
-from flask import Flask, render_template, request, redirect, jsonify
+from flask import Flask, render_template, request, redirect, jsonify, send_from_directory, make_response
 import os
-from flask import send_from_directory
+
 
 from detector import detectar_objeto
 from database import (
@@ -294,13 +294,27 @@ def api_test():
 # VER ÚLTIMA FOTO
 # ==========================================
 
+
 @app.route("/foto")
 def foto():
 
-    return send_from_directory(
-        UPLOAD_FOLDER,
-        "esp32.jpg"
+    response = make_response(
+        send_from_directory(
+            UPLOAD_FOLDER,
+            "esp32.jpg"
+        )
     )
+
+    # Evitar que el navegador use la imagen guardada en caché
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+
+    return response
+
+# ==========================================
+# INICIO DEL SERVIDOR
+# ==========================================
 
 print(app.url_map)
 
