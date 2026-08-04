@@ -24,19 +24,12 @@ def detectar_forma(imagen):
     # ==========================
 
     binaria = cv2.adaptiveThreshold(
-
         gris,
-
         255,
-
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-
         cv2.THRESH_BINARY_INV,
-
         31,
-
         8
-
     )
 
     # ==========================
@@ -76,11 +69,12 @@ def detectar_forma(imagen):
 
     print("Area:", area)
 
-    # Ignorar objetos pequeños
     if area < 300:
         return "DESCONOCIDA"
 
-    # Ignorar si ocupa casi toda la imagen
+    if len(contorno) < 3:
+        return "DESCONOCIDA"
+
     alto, ancho = imagen.shape[:2]
 
     if area > 0.90 * (alto * ancho):
@@ -91,6 +85,9 @@ def detectar_forma(imagen):
     # ==========================
 
     perimetro = cv2.arcLength(contorno, True)
+
+    if perimetro == 0:
+        return "DESCONOCIDA"
 
     aproximacion = cv2.approxPolyDP(
         contorno,
@@ -124,20 +121,17 @@ def detectar_forma(imagen):
         if 0.85 <= relacion <= 1.15:
             return "CUADRADO"
 
-        else:
-            return "DESCONOCIDA"
+        return "DESCONOCIDA"
 
     # ==========================
     # CÍRCULO
     # ==========================
 
-    else:
+    circularidad = (4 * np.pi * area) / (perimetro * perimetro)
 
-        circularidad = (4 * np.pi * area) / (perimetro * perimetro)
+    print("Circularidad:", circularidad)
 
-        print("Circularidad:", circularidad)
-
-        if lados > 6 and circularidad >= 0.72:
-            return "CIRCULO"
+    if lados > 6 and circularidad >= 0.72:
+        return "CIRCULO"
 
     return "DESCONOCIDA"

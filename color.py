@@ -4,54 +4,52 @@ import numpy as np
 
 def detectar_color(imagen):
 
+    # Convertir a HSV
     hsv = cv2.cvtColor(imagen, cv2.COLOR_BGR2HSV)
+
+    # ==========================
+    # RANGOS HSV
+    # ==========================
 
     colores = {
 
         "ROJO": [
-
-            ((0, 60, 40), (15, 255, 255)),
-            ((165, 60, 40), (180, 255, 255))
-
-        ],
-
-        "VERDE": [
-
-            ((40, 60, 40), (85, 255, 255))
-
+            ((0, 120, 70), (10, 255, 255)),
+            ((170, 120, 70), (180, 255, 255))
         ],
 
         "AZUL": [
+            ((95, 100, 50), (130, 255, 255))
+        ],
 
-            ((95, 70, 40), (130, 255, 255))
-
+        "VERDE": [
+            ((40, 80, 40), (85, 255, 255))
         ],
 
         "BLANCO": [
-
-            ((0, 0, 180), (180, 50, 255))
-
+            ((0, 0, 180), (180, 40, 255))
         ]
 
     }
 
-    kernel = np.ones((3,3), np.uint8)
+    kernel = np.ones((5, 5), np.uint8)
 
     mejor_color = "DESCONOCIDO"
     mayor_area = 0
 
     for nombre, rangos in colores.items():
 
-        mascara_total = np.zeros(hsv.shape[:2], dtype=np.uint8)
+        area_total = 0
 
         for bajo, alto in rangos:
 
             mascara = cv2.inRange(
                 hsv,
-                np.array(bajo, np.uint8),
-                np.array(alto, np.uint8)
+                np.array(bajo, dtype=np.uint8),
+                np.array(alto, dtype=np.uint8)
             )
 
+            # Eliminar ruido
             mascara = cv2.morphologyEx(
                 mascara,
                 cv2.MORPH_OPEN,
@@ -64,15 +62,19 @@ def detectar_color(imagen):
                 kernel
             )
 
-            mascara_total = cv2.bitwise_or(
-                mascara_total,
-                mascara
+            # Ignorar el fondo negro
+            fondo = cv2.inRange(
+                hsv,
+                np.array((0, 0, 25), dtype=np.uint8),
+                np.array((180, 255, 255), dtype=np.uint8)
             )
 
-        area_total = cv2.countNonZero(mascara_total)
+            mascara = cv2.bitwise_and(
+                mascara,
+                fondo
+            )
 
-        # NO USAR EN RAILWAY
-        # cv2.imshow(nombre, mascara_total)
+            area_total += cv2.countNonZero(mascara)
 
         print(nombre, area_total)
 
@@ -81,12 +83,13 @@ def detectar_color(imagen):
             mayor_area = area_total
             mejor_color = nombre
 
-    print("--------------------------------")
-    print("Mayor area:", mayor_area)
-    print("Color:", mejor_color)
-    print("--------------------------------")
+    if mayor_area < 100:
 
-    if mayor_area < 50:
         return "DESCONOCIDO"
+
+    print("----------------------------------")
+    print("Color detectado:", mejor_color)
+    print("Área:", mayor_area)
+    print("----------------------------------")
 
     return mejor_color
