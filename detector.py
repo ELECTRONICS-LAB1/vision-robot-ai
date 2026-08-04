@@ -1,131 +1,174 @@
 import cv2
 import numpy as np
 
-from forma import detectar_forma
-from color import detectar_color
 
+def detectar_forma(imagen):
 
-def detectar_objeto(ruta_imagen):
-
-    imagen = cv2.imread(ruta_imagen)
-
-    if imagen is None:
-        return None
-
-    # ==========================================
-    # PREPROCESAMIENTO
-    # ==========================================
+    # ==========================
+    # ESCALA DE GRISES
+    # ==========================
 
     gris = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
 
-    gris = cv2.GaussianBlur(gris, (5, 5), 0)
+    # Suavizar conservando bordes
+    gris = cv2.bilateralFilter(gris, 9, 75, 75)
 
-    _, binaria = cv2.threshold(
-        gris,
-        120,
-        255,
-        cv2.THRESH_BINARY_INV
+    # Mejorar contraste
+    clahe = cv2.createCLAHE(
+        clipLimit=2.0,
+        tileGridSize=(8, 8)
     )
+
+    gris = clahe.apply(gris)
+
+    # ==========================
+    # BINARIZACIÓN
+    # ==========================
+
+    binaria = cv2.adaptiveThreshold(
+
+        gris,
+
+        255,
+
+        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+
+        cv2.THRESH_BINARY_INV,
+
+        31,
+
+        8
+
+    )
+
+    # ==========================
+    # LIMPIEZA
+    # ==========================
 
     kernel = np.ones((3, 3), np.uint8)
 
     binaria = cv2.morphologyEx(
+
         binaria,
+
         cv2.MORPH_OPEN,
+
         kernel
+
     )
 
     binaria = cv2.morphologyEx(
+
         binaria,
+
         cv2.MORPH_CLOSE,
+
         kernel
+
     )
 
-    # ==========================================
+    # ==========================
     # CONTORNOS
-    # ==========================================
+    # ==========================
 
     contornos, _ = cv2.findContours(
+
         binaria,
+
         cv2.RETR_EXTERNAL,
+
         cv2.CHAIN_APPROX_SIMPLE
+
     )
 
     if len(contornos) == 0:
-        return None
+
+        return "DESCONOCIDA"
 
     contorno = max(contornos, key=cv2.contourArea)
 
     area = cv2.contourArea(contorno)
 
-    if area < 300:
-        return None
+    print("Área:", area)
 
-    # ==========================================
-    # CENTRO DEL OBJETO
-    # ==========================================
+    if area < 800:
 
-    M = cv2.moments(contorno)
+        return "DESCONOCIDA"
 
-    if M["m00"] != 0:
+    # Evitar contornos inválidos
+    if len(contorno) < 3:
 
-        cx = int(M["m10"] / M["m00"])
-        cy = int(M["m01"] / M["m00"])
+        return "DESCONOCIDA"
+
+    # ==========================
+    # APROXIMACIÓN
+    # ==========================
+
+    perimetro = cv2.arcLength(contorno, True)
+
+    # Evitar división por cero
+    if perimetro == 0:
+
+        return "DESCONOCIDA"
+
+    aproximacion = cv2.approxPolyDP(
+
+        contorno,
+
+        0.02 * perimetro,
+
+        True
+
+    )
+
+    lados = len(aproximacion)
+
+    print("Lados detectados:", lados)
+
+    # ==========================
+    # TRIÁNGULO
+    # ==========================
+
+    if lados == 3:
+
+        return "TRIANGULO"
+
+    # ==========================
+    # CUADRADO
+    # ==========================
+
+    elif lados == 4:
+
+        x, y, w, h = cv2.boundingRect(aproximacion)
+
+        relacion = w / float(h)
+
+        print("Relación:", relacion)
+
+        if 0.85 <= relacion <= 1.15:
+
+            return "CUADRADO"
+
+        else:
+
+            return "DESCONOCIDA"
+
+    # ==========================
+    # CÍRCULO
+    # ==========================
 
     else:
 
-        cx = 0
-        cy = 0
+        circularidad = (4 * np.pi * area) / (perimetro * perimetro)
 
-    # ==========================================
-    # RECORTAR OBJETO
-    # ==========================================
+        print("Circularidad:", circularidad)
 
-    x, y, w, h = cv2.boundingRect(contorno)
+        if circularidad >= 0.80:
 
-    margen = 10
+            return "CIRCULO"
 
-    x = max(0, x - margen)
-    y = max(0, y - margen)
+    # ==========================
+    # NO RECONOCIDA
+    # ==========================
 
-    w = min(imagen.shape[1] - x, w + 2 * margen)
-    h = min(imagen.shape[0] - y, h + 2 * margen)
-
-    objeto = imagen[y:y+h, x:x+w]
-
-    # ==========================================
-    # DETECCIÓN
-    # ==========================================
-
-    color = detectar_color(objeto)
-
-    forma = detectar_forma(objeto)
-
-    # ==========================================
-    # RESULTADO
-    # ==========================================
-
-    resultado = {
-
-        "color": color,
-
-        "forma": forma,
-
-        "x": cx,
-
-        "y": cy,
-
-        "area": area
-
-    }
-
-    print("----------------------------------")
-    print("OBJETO DETECTADO")
-    print("----------------------------------")
-    print("Color :", color)
-    print("Forma :", forma)
-    print("Area  :", area)
-    print("Centro:", (cx, cy))
-    print("----------------------------------")
-
-    return resultado
+    return "DESCONOCIDA"

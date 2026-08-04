@@ -57,8 +57,6 @@ def detectar_forma(imagen):
         kernel
     )
 
-    cv2.imshow("Binaria", binaria)
-
     # ==========================
     # CONTORNOS
     # ==========================
@@ -103,28 +101,6 @@ def detectar_forma(imagen):
     lados = len(aproximacion)
 
     print("Lados:", lados)
-
-    imagen_contorno = imagen.copy()
-
-    cv2.drawContours(
-        imagen_contorno,
-        [aproximacion],
-        -1,
-        (0, 255, 0),
-        3
-    )
-
-    cv2.putText(
-        imagen_contorno,
-        f"Lados: {lados}",
-        (20, 35),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        1,
-        (0, 255, 0),
-        2
-    )
-
-    cv2.imshow("Contorno", imagen_contorno)
 
     # ==========================
     # TRIÁNGULO
